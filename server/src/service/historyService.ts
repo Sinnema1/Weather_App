@@ -1,5 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // TODO: Define a City class with name and id properties
 class City {
@@ -18,6 +22,16 @@ class HistoryService {
 
   constructor() {
     this.filePath = path.join(__dirname, 'searchHistory.json');
+    this.ensureFileExists();
+  }
+
+  // Ensure the searchHistory.json file exists
+  private async ensureFileExists() {
+    try {
+      await fs.access(this.filePath);
+    } catch (error) {
+      await fs.writeFile(this.filePath, JSON.stringify([]));
+    }
   }
   // TODO: Define a read method that reads from the searchHistory.json file
   async getHistory(): Promise<City[]> {
@@ -32,7 +46,7 @@ class HistoryService {
 
   // TODO: Define a write method that writes the updated cities array to the searchHistory.json file
   private async updateCity(cities: City[]) {
-    return await fs.writeFile('db/searchHistory.json', JSON.stringify(cities, null, '\t'));
+    return await fs.writeFile(this.filePath, JSON.stringify(cities, null, '\t'));
   }
   // TODO: Define a getCities method that reads the cities from the searchHistory.json file and returns them as an array of City objects
   async getCities() {
