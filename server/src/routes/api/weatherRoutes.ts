@@ -1,31 +1,33 @@
 import { Router, type Request, type Response } from 'express';
-const router = Router();
-
 import HistoryService from '../../service/historyService.js';
 import WeatherService from '../../service/weatherService.js';
 
+const router = Router();
+
 // TODO: POST Request with city name to retrieve weather data
 router.post('/', async (req: Request, res: Response) => {
-  const { city } = req.body;
+  const { cityName } = req.body;
 
-  if (!city) {
+  if (!cityName) {
     return res.status(400).send('City name is required');
   }
 
   try {
+    await HistoryService.addCity(cityName);
 
-    await HistoryService.addCity(city);
+    // Get weather data from city name
+    const weatherData = await WeatherService.getWeatherForCity(cityName);
 
-  // TODO: GET weather data from city name
-  const weatherData = await WeatherService.getWeatherForCity(city);
-  // TODO: save city to search history
-  return res.json({
-    message: 'City added to search history',
-    weatherData,
-  });
-} catch (error) {
-  return res.status(500).send('Internal Server Error');
-}
+    // Save city to search history
+    return res.json({
+      message: 'City added to search history',
+      currentWeather: weatherData.currentWeather,
+      forecastArray: weatherData.forecastArray,
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('Internal Server Error');
+  }
 });
 
 // TODO: GET search history
