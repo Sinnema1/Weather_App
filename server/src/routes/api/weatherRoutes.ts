@@ -22,7 +22,7 @@ router.post('/', async (req: Request, res: Response) => {
     return res.json({
       message: 'City added to search history',
       currentWeather: weatherData.currentWeather,
-      forecastArray: weatherData.forecastArray,
+      forecastArray: weatherData.forecastArray
     });
   } catch (error) {
     console.error('Error:', error);
