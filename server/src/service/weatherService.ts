@@ -13,7 +13,7 @@ class Weather {
   city: string;
   date: string;
   icon: string;
-  description: string;
+  iconDescription: string;
   tempF: number;
   windSpeed: number;
   humidity: number;
@@ -22,7 +22,7 @@ class Weather {
     city: string,
     date: string,
     icon: string,
-    description: string,
+    iconDescription: string,
     tempF: number,
     windSpeed: number,
     humidity: number
@@ -30,7 +30,7 @@ class Weather {
     this.city = city;
     this.date = date;
     this.icon = icon;
-    this.description = description;
+    this.iconDescription = iconDescription;
     this.tempF = tempF;
     this.windSpeed = windSpeed;
     this.humidity = humidity;
@@ -76,7 +76,7 @@ class WeatherService {
 
   // TODO: Create buildWeatherQuery method
   private buildWeatherQuery(coordinates: Coordinates): string {
-    return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${this.apiKey}`;
+    return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&units=imperial&appid=${this.apiKey}`;
   }
 
   // TODO: Create fetchAndDestructureLocationData method
@@ -103,11 +103,14 @@ class WeatherService {
       throw new Error('Invalid weather data');
     }
   
+    // get first item in array
     const currentWeatherData = response.list[0];
+  
+    console.log('Selected Weather Data for Current Weather:', currentWeatherData);
   
     return new Weather(
       response.city.name,
-      currentWeatherData.dt_txt,
+      currentWeatherData.dt_txt.slice(0,10),
       currentWeatherData.weather[0].icon,
       currentWeatherData.weather[0].description,
       currentWeatherData.main.temp,
@@ -117,24 +120,36 @@ class WeatherService {
   }
 
   // TODO: Complete buildForecastArray method
-  private buildForecastArray(forecastData: any): Weather[] {
+  private buildForecastArray(forecastData: any, currentDate: string): Weather[] {
     if (!forecastData.list || !Array.isArray(forecastData.list)) {
       throw new Error('Invalid forecast data');
     }
-
-    const currentDate = new Date().toISOString().split('T')[0];
-
-    return forecastData.list
-      .filter((item: any) => item.dt_txt.split(' ')[0] !== currentDate) // Exclude data for the current day
-      .map((item: any) => new Weather(
+  
+    // Exclude the first item from the forecast array
+    const forecastList = forecastData.list.filter((item: any) => item.dt_txt.split(' ')[0] !== currentDate);
+  
+    // Get distinct dates in the forecast array
+    const dates = Array.from(new Set(forecastList.map((item: any) => item.dt_txt.split(' ')[0])));
+  
+    const dailyForecasts = dates.map(date => {
+      const noonForecast = forecastList.find((item: any) =>
+        item.dt_txt.startsWith(date) && item.dt_txt.includes('12:00:00')
+      );
+  
+      const forecast = noonForecast || forecastList.find((item: any) => item.dt_txt.startsWith(date));
+  
+      return new Weather(
         forecastData.city.name,
-        item.dt_txt,
-        item.weather[0].icon, // Access the first element of the weather array
-        item.weather[0].description, // Access the first element of the weather array
-        item.main.temp,
-        item.wind.speed,
-        item.main.humidity
-      ));
+        forecast.dt_txt.slice(0, 10),
+        forecast.weather[0].icon,
+        forecast.weather[0].description,
+        forecast.main.temp,
+        forecast.wind.speed,
+        forecast.main.humidity
+      );
+    });
+  
+    return dailyForecasts;
   }
   // TODO: Complete getWeatherForCity method
   async getWeatherForCity(cityName: string): Promise<any> {
@@ -142,7 +157,8 @@ class WeatherService {
       const coordinates = await this.fetchAndDestructureLocationData(cityName);
       const weatherData = await this.fetchWeatherData(coordinates);
       const currentWeather = this.parseCurrentWeather(weatherData);
-      const forecastArray = this.buildForecastArray(weatherData);
+      const currentDate = new Date(currentWeather.date).toISOString().split('T')[0];
+      const forecastArray = this.buildForecastArray(weatherData, currentDate);
       console.log('getWeatherForCity coordinates:', coordinates);
       console.log('getWeatherForCity Weather Data:', weatherData);
       return { currentWeather, forecastArray };

@@ -35,20 +35,30 @@ API Calls
 */
 
 const fetchWeather = async (cityName: string) => {
-  const response = await fetch('/api/weather/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ cityName }),
-  });
+  try {
+    const response = await fetch('/api/weather/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cityName }),
+    });
 
-  const weatherData = await response.json();
+    const weatherData = await response.json();
+    console.log('Fetched Weather Data:', weatherData);
 
-  console.log('weatherData: ', weatherData);
+    if (weatherData.currentWeather) {
+      renderCurrentWeather(weatherData.currentWeather);
+    } else {
+      console.error('Error: currentWeather is undefined in the response');
+    }
 
-  renderCurrentWeather(weatherData[0]);
-  renderForecast(weatherData.slice(1));
+    if (weatherData.forecastArray) {
+      renderForecast(weatherData.forecastArray);
+    }
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+  }
 };
 
 const fetchSearchHistory = async () => {
