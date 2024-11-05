@@ -1,1 +1,14 @@
-[]
+[
+	{
+		"name": "Phoenix",
+		"id": "e2c2394d-8f1a-4f0d-8413-1360ea55ca3e"
+	},
+	{
+		"name": "Tucson",
+		"id": "f089d9a4-8665-4675-a5e3-e25d0788f51f"
+	},
+	{
+		"name": "Tempe",
+		"id": "bcf4771b-d201-4586-a8ad-3fd703ab7ac4"
+	}
+]

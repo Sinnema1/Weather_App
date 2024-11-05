@@ -22,7 +22,7 @@ class HistoryService {
   private filePath: string;
 
   constructor() {
-    this.filePath = path.join(__dirname, 'searchHistory.json');
+    this.filePath = path.join(__dirname, '../../db/searchHistory.json');
     this.ensureFileExists();
   }
 
